@@ -13,7 +13,7 @@ public class AttendanceController {
     public Map<String, String> status() {
 
         Map<String, String> response = new HashMap<>();
-        response.put("status", "Attendance Service Running");
+        response.put("status", "Webhook Deployment Success");
 
         return response;
     }
