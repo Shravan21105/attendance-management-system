@@ -12,7 +12,7 @@ pipeline {
             }
 
             steps {
-                sh 'mvn clean package -Dmaven.repo.local=/tmp/.m2'
+                sh 'rm -rf target && mvn package -Dmaven.repo.local=/tmp/.m2'
             }
         }
 
