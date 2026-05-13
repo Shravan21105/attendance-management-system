@@ -7,19 +7,28 @@ pipeline {
             agent {
                 docker {
                     image 'maven:3.9.6-eclipse-temurin-21'
-                    args '-u root -v /tmp:/tmp'
+                    args '-u root:root'
                 }
             }
 
             steps {
-                sh 'rm -rf target'
-                sh 'mvn package -Dmaven.repo.local=/tmp/.m2'
+                sh 'mvn clean package'
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 sh 'docker build -t attendance-system .'
+            }
+        }
+
+        stage('Deploy Container') {
+            steps {
+                sh '''
+                docker stop attendance-container || true
+                docker rm attendance-container || true
+                docker run -d --name attendance-container -p 8080:8080 attendance-system
+                '''
             }
         }
 
