@@ -4,8 +4,15 @@ pipeline {
     stages {
 
         stage('Build Maven Project') {
+            agent {
+                docker {
+                    image 'maven:3.9.6-eclipse-temurin-21'
+                    args '-v /tmp:/tmp'
+                }
+            }
+
             steps {
-                sh 'mvn clean package'
+                sh 'mvn clean package -Dmaven.repo.local=/tmp/.m2'
             }
         }
 
