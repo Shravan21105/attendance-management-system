@@ -13,21 +13,12 @@ pipeline {
 
         stage('Build Maven Project') {
 
-            agent {
-                docker {
-                    image 'maven:3.9.6-eclipse-temurin-21'
-                    args '-u root:root'
-                }
-            }
-
             steps {
 
                 sh 'mvn clean package -DskipTests'
 
-                sh 'echo ===== CURRENT DIRECTORY FILES ====='
                 sh 'ls -la'
 
-                sh 'echo ===== TARGET DIRECTORY FILES ====='
                 sh 'ls -la target'
             }
         }
