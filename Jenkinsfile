@@ -1,4 +1,3 @@
-//Test Email
 pipeline {
 
     agent any
@@ -85,9 +84,9 @@ pipeline {
 
                 docker rm attendance-container || true
 
-                docker run -d \\
-                --name attendance-container \\
-                -p 8080:8080 \\
+                docker run -d \
+                --name attendance-container \
+                -p 8080:8080 \
                 ${ECR_REPO}:${BUILD_NUMBER}
                 """
             }
@@ -107,16 +106,19 @@ pipeline {
                 """
             }
         }
+    }
 
-        stage('Send Email Notification') {
+    post {
 
-            steps {
+        success {
 
-                emailext(
+            echo 'Build and Deployment Successful'
 
-                    subject: "Jenkins Build Success - ${BUILD_NUMBER}",
+            emailext(
 
-                    body: """
+                subject: "SUCCESS: ${JOB_NAME} #${BUILD_NUMBER}",
+
+                body: """
 Build Successful
 
 Job Name: ${JOB_NAME}
@@ -126,21 +128,15 @@ Build Number: ${BUILD_NUMBER}
 Docker Image:
 ${ECR_REPO}:${BUILD_NUMBER}
 
+Build URL:
+${BUILD_URL}
+
 Deployment Status:
 Application deployed successfully on EC2.
 """,
 
-                    to: 'shravansadalgekar2005@gmail.com'
-                )
-            }
-        }
-    }
-
-    post {
-
-        success {
-
-            echo 'Build and Deployment Successful'
+                to: 'shravansadalgekar2005@gmail.com'
+            )
         }
 
         failure {
@@ -149,18 +145,20 @@ Application deployed successfully on EC2.
 
             emailext(
 
-                subject: "Jenkins Build Failed - ${BUILD_NUMBER}",
+                subject: "FAILED: ${JOB_NAME} #${BUILD_NUMBER}",
 
                 body: """
-                Build Failed
+Build Failed
 
-                Job Name: ${JOB_NAME}
+Job Name: ${JOB_NAME}
 
-                Build Number: ${BUILD_NUMBER}
+Build Number: ${BUILD_NUMBER}
 
-                Please check Jenkins Console Output.
+Build URL:
+${BUILD_URL}
 
-                """,
+Please check Jenkins Console Output.
+""",
 
                 to: 'shravansadalgekar2005@gmail.com'
             )
