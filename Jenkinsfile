@@ -52,8 +52,10 @@ pipeline {
             steps {
 
                 withCredentials([[
+
                     $class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: 'aws-ecr-credentials'
+
                 ]]) {
 
                     sh """
@@ -82,9 +84,9 @@ pipeline {
 
                 docker rm attendance-container || true
 
-                docker run -d \
-                --name attendance-container \
-                -p 8080:8080 \
+                docker run -d \\
+                --name attendance-container \\
+                -p 8080:8080 \\
                 ${ECR_REPO}:${BUILD_NUMBER}
                 """
             }
@@ -114,20 +116,20 @@ pipeline {
                     subject: "Jenkins Build Success - ${BUILD_NUMBER}",
 
                     body: """
-                    Build Successful
+Build Successful
 
-                    Job Name: ${JOB_NAME}
+Job Name: ${JOB_NAME}
 
-                    Build Number: ${BUILD_NUMBER}
+Build Number: ${BUILD_NUMBER}
 
-                    Docker Image:
-                    ${ECR_REPO}:${BUILD_NUMBER}
+Docker Image:
+${ECR_REPO}:${BUILD_NUMBER}
 
-                    Deployment Status:
-                    Application deployed successfully on EC2.
-                    """,
+Deployment Status:
+Application deployed successfully on EC2.
+""",
 
-                    to: 'YOUR_GMAIL@gmail.com'
+                    to: 'shravansadalgekar2005@gmail.com'
                 )
             }
         }
@@ -156,9 +158,10 @@ pipeline {
                 Build Number: ${BUILD_NUMBER}
 
                 Please check Jenkins Console Output.
+
                 """,
 
-                to: 'YOUR_GMAIL@gmail.com'
+                to: 'shravansadalgekar2005@gmail.com'
             )
         }
     }
