@@ -1,4 +1,3 @@
-// updated with CI-CD
 package com.attendance.attendancesystem;
 
 import org.springframework.web.bind.annotation.*;
