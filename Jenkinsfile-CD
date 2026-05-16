@@ -1,0 +1,145 @@
+pipeline {
+
+    agent any
+
+    parameters {
+
+        choice(
+            name: 'ENVIRONMENT',
+            choices: ['Staging', 'Production'],
+            description: 'Select deployment environment'
+        )
+
+        string(
+            name: 'BUILD_NUMBER',
+            defaultValue: '1',
+            description: 'Docker image build number from ECR'
+        )
+    }
+
+    environment {
+
+        AWS_ACCOUNT_ID = '816975732391'
+        AWS_REGION = 'ap-south-1'
+        IMAGE_NAME = 'attendance-system'
+
+        ECR_REPO = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${IMAGE_NAME}"
+    }
+
+    stages {
+
+        stage('Display Parameters') {
+
+            steps {
+
+                echo "ENVIRONMENT: ${params.ENVIRONMENT}"
+                echo "BUILD NUMBER: ${params.BUILD_NUMBER}"
+            }
+        }
+
+        stage('Login to AWS ECR') {
+
+            steps {
+
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-ecr-credentials'
+                ]]) {
+
+                    sh """
+                    aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+                    """
+                }
+            }
+        }
+
+        stage('Pull Docker Image') {
+
+            steps {
+
+                sh """
+                docker pull ${ECR_REPO}:${params.BUILD_NUMBER}
+                """
+            }
+        }
+
+        stage('Deploy Container') {
+
+            steps {
+
+                sh """
+                docker stop attendance-container || true
+
+                docker rm attendance-container || true
+
+                docker run -d \
+                --name attendance-container \
+                -p 8080:8080 \
+                ${ECR_REPO}:${params.BUILD_NUMBER}
+                """
+            }
+        }
+
+        stage('Verify Deployment') {
+
+            steps {
+
+                sh """
+                docker ps
+                """
+
+                sh """
+                sleep 10
+                docker exec attendance-container curl http://localhost:8080/attendance/status
+                """
+            }
+        }
+    }
+
+    post {
+
+        success {
+
+            emailext(
+
+                subject: "CD Pipeline Success - Build ${params.BUILD_NUMBER}",
+
+                body: """
+Deployment Successful
+
+Environment:
+${params.ENVIRONMENT}
+
+Docker Image:
+${ECR_REPO}:${params.BUILD_NUMBER}
+
+Application deployed successfully.
+""",
+
+                to: 'shravansadalgekar2005@gmail.com'
+            )
+        }
+
+        failure {
+
+            emailext(
+
+                subject: "CD Pipeline Failed - Build ${params.BUILD_NUMBER}",
+
+                body: """
+Deployment Failed
+
+Environment:
+${params.ENVIRONMENT}
+
+Build Number:
+${params.BUILD_NUMBER}
+
+Please check Jenkins logs.
+""",
+
+                to: 'shravansadalgekar2005@gmail.com'
+            )
+        }
+    }
+}
